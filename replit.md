@@ -103,6 +103,10 @@ CineMatch is a modern movie discovery web application built with a full-stack ar
 ```
 Changelog:
 - June 27, 2025. Initial setup
+- June 27, 2025. Year filter feature removed per user request
+- June 27, 2025. Database expanded with Korean movies, Bollywood films, and top-rated content
+- June 27, 2025. Enhanced movie data with cast information and trailer support
+- June 27, 2025. Application ready for deployment with comprehensive movie discovery features
 ```
 
 ## User Preferences
