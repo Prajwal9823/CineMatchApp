@@ -169,42 +169,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/tmdb/sync/bollywood', async (req, res) => {
     try {
-      // Search for popular Hindi/Bollywood movies
-      const bollywoodMovies = await tmdbService.discoverMovies({
-        with_original_language: 'hi',
-        sort_by: 'popularity.desc',
-        page: 1
-      });
-      
+      // Search for popular Hindi/Bollywood movies - multiple pages
       const syncedMovies = [];
-      for (const tmdbMovie of bollywoodMovies.results) {
-        let movie = await storage.getMovieByTmdbId(tmdbMovie.id);
+      for (let page = 1; page <= 3; page++) {
+        const bollywoodMovies = await tmdbService.discoverMovies({
+          with_original_language: 'hi',
+          sort_by: 'popularity.desc',
+          page: page
+        });
         
-        if (!movie) {
-          const movieDetails = await tmdbService.getMovieDetails(tmdbMovie.id);
-          movie = await storage.createMovie({
-            tmdbId: movieDetails.id,
-            title: movieDetails.title,
-            overview: movieDetails.overview,
-            posterPath: movieDetails.poster_path,
-            backdropPath: movieDetails.backdrop_path,
-            releaseDate: movieDetails.release_date,
-            runtime: movieDetails.runtime,
-            voteAverage: movieDetails.vote_average.toString(),
-            voteCount: movieDetails.vote_count,
-            genres: movieDetails.genres,
-            originalLanguage: movieDetails.original_language,
-            adult: movieDetails.adult,
-            popularity: movieDetails.popularity.toString(),
-          });
+        for (const tmdbMovie of bollywoodMovies.results) {
+          let movie = await storage.getMovieByTmdbId(tmdbMovie.id);
+          
+          if (!movie) {
+            const [movieDetails, castData] = await Promise.all([
+              tmdbService.getMovieDetails(tmdbMovie.id),
+              tmdbService.getMovieCast(tmdbMovie.id)
+            ]);
+            
+            const trailerUrl = await tmdbService.getYouTubeEmbedUrl(tmdbMovie.id);
+            const cast = castData.cast.slice(0, 10).map(member => ({
+              id: member.id,
+              name: member.name,
+              character: member.character,
+              profile_path: member.profile_path
+            }));
+            
+            movie = await storage.createMovie({
+              tmdbId: movieDetails.id,
+              title: movieDetails.title,
+              overview: movieDetails.overview,
+              posterPath: movieDetails.poster_path,
+              backdropPath: movieDetails.backdrop_path,
+              releaseDate: movieDetails.release_date,
+              runtime: movieDetails.runtime,
+              voteAverage: movieDetails.vote_average.toString(),
+              voteCount: movieDetails.vote_count,
+              genres: movieDetails.genres,
+              cast: cast,
+              trailerUrl: trailerUrl,
+              originalLanguage: movieDetails.original_language,
+              adult: movieDetails.adult,
+              popularity: movieDetails.popularity.toString(),
+            });
+          }
+          syncedMovies.push(movie);
         }
-        syncedMovies.push(movie);
       }
       
-      res.json({ syncedMovies, total: bollywoodMovies.total_results });
+      res.json({ syncedMovies, total: syncedMovies.length });
     } catch (error) {
       console.error("Error syncing Bollywood movies:", error);
       res.status(500).json({ message: "Failed to sync Bollywood movies" });
+    }
+  });
+
+  // Sync Korean movies
+  app.post('/api/tmdb/sync/korean', async (req, res) => {
+    try {
+      const syncedMovies = [];
+      for (let page = 1; page <= 2; page++) {
+        const koreanMovies = await tmdbService.discoverMovies({
+          with_original_language: 'ko',
+          sort_by: 'popularity.desc',
+          page: page
+        });
+        
+        for (const tmdbMovie of koreanMovies.results) {
+          let movie = await storage.getMovieByTmdbId(tmdbMovie.id);
+          
+          if (!movie) {
+            const [movieDetails, castData] = await Promise.all([
+              tmdbService.getMovieDetails(tmdbMovie.id),
+              tmdbService.getMovieCast(tmdbMovie.id)
+            ]);
+            
+            const trailerUrl = await tmdbService.getYouTubeEmbedUrl(tmdbMovie.id);
+            const cast = castData.cast.slice(0, 10).map(member => ({
+              id: member.id,
+              name: member.name,
+              character: member.character,
+              profile_path: member.profile_path
+            }));
+            
+            movie = await storage.createMovie({
+              tmdbId: movieDetails.id,
+              title: movieDetails.title,
+              overview: movieDetails.overview,
+              posterPath: movieDetails.poster_path,
+              backdropPath: movieDetails.backdrop_path,
+              releaseDate: movieDetails.release_date,
+              runtime: movieDetails.runtime,
+              voteAverage: movieDetails.vote_average.toString(),
+              voteCount: movieDetails.vote_count,
+              genres: movieDetails.genres,
+              cast: cast,
+              trailerUrl: trailerUrl,
+              originalLanguage: movieDetails.original_language,
+              adult: movieDetails.adult,
+              popularity: movieDetails.popularity.toString(),
+            });
+          }
+          syncedMovies.push(movie);
+        }
+      }
+      
+      res.json({ syncedMovies, total: syncedMovies.length });
+    } catch (error) {
+      console.error("Error syncing Korean movies:", error);
+      res.status(500).json({ message: "Failed to sync Korean movies" });
+    }
+  });
+
+  // Sync top-rated movies
+  app.post('/api/tmdb/sync/top-rated', async (req, res) => {
+    try {
+      const syncedMovies = [];
+      for (let page = 1; page <= 3; page++) {
+        const topRatedMovies = await tmdbService.getTopRatedMovies(page);
+        
+        for (const tmdbMovie of topRatedMovies.results) {
+          let movie = await storage.getMovieByTmdbId(tmdbMovie.id);
+          
+          if (!movie) {
+            const [movieDetails, castData] = await Promise.all([
+              tmdbService.getMovieDetails(tmdbMovie.id),
+              tmdbService.getMovieCast(tmdbMovie.id)
+            ]);
+            
+            const trailerUrl = await tmdbService.getYouTubeEmbedUrl(tmdbMovie.id);
+            const cast = castData.cast.slice(0, 10).map(member => ({
+              id: member.id,
+              name: member.name,
+              character: member.character,
+              profile_path: member.profile_path
+            }));
+            
+            movie = await storage.createMovie({
+              tmdbId: movieDetails.id,
+              title: movieDetails.title,
+              overview: movieDetails.overview,
+              posterPath: movieDetails.poster_path,
+              backdropPath: movieDetails.backdrop_path,
+              releaseDate: movieDetails.release_date,
+              runtime: movieDetails.runtime,
+              voteAverage: movieDetails.vote_average.toString(),
+              voteCount: movieDetails.vote_count,
+              genres: movieDetails.genres,
+              cast: cast,
+              trailerUrl: trailerUrl,
+              originalLanguage: movieDetails.original_language,
+              adult: movieDetails.adult,
+              popularity: movieDetails.popularity.toString(),
+            });
+          }
+          syncedMovies.push(movie);
+        }
+      }
+      
+      res.json({ syncedMovies, total: syncedMovies.length });
+    } catch (error) {
+      console.error("Error syncing top-rated movies:", error);
+      res.status(500).json({ message: "Failed to sync top-rated movies" });
     }
   });
 

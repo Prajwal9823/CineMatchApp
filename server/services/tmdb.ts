@@ -36,6 +36,14 @@ export interface TMDBVideo {
   official: boolean;
 }
 
+export interface TMDBCastMember {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+  order: number;
+}
+
 class TMDBService {
   private apiKey: string;
   private baseUrl: string = 'https://api.themoviedb.org/3';
@@ -106,6 +114,10 @@ class TMDBService {
 
   async getMovieVideos(movieId: number): Promise<{ results: TMDBVideo[] }> {
     return this.makeRequest<{ results: TMDBVideo[] }>(`/movie/${movieId}/videos`);
+  }
+
+  async getMovieCast(movieId: number): Promise<{ cast: TMDBCastMember[] }> {
+    return this.makeRequest<{ cast: TMDBCastMember[] }>(`/movie/${movieId}/credits`);
   }
 
   async getGenres(): Promise<{ genres: TMDBGenre[] }> {

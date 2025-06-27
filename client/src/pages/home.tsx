@@ -94,14 +94,58 @@ export default function Home() {
     },
   });
 
+  // Sync Korean movies
+  const syncKoreanMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/tmdb/sync/korean");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/movies"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/movies/trending"] });
+    },
+    onError: (error) => {
+      console.error("Error syncing Korean movies:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sync Korean movies",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Sync top-rated movies
+  const syncTopRatedMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/tmdb/sync/top-rated");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/movies"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/movies/trending"] });
+    },
+    onError: (error) => {
+      console.error("Error syncing top-rated movies:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sync top-rated movies",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Initialize movie data (no authentication required)
   useEffect(() => {
     if (!moviesData?.movies || moviesData.movies.length === 0) {
       syncPopularMutation.mutate();
-      // Also sync Bollywood movies for diversity
+      // Sync diverse content for a comprehensive database
       setTimeout(() => {
         syncBollywoodMutation.mutate();
-      }, 1000);
+      }, 2000);
+      setTimeout(() => {
+        syncKoreanMutation.mutate();
+      }, 4000);
+      setTimeout(() => {
+        syncTopRatedMutation.mutate();
+      }, 6000);
     }
     if (!trendingMovies || trendingMovies.length === 0) {
       syncTrendingMutation.mutate();

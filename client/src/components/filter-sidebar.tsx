@@ -33,7 +33,6 @@ export default function FilterSidebar({ filters, onFilterChange, onClose }: Filt
   const [selectedGenres, setSelectedGenres] = useState<number[]>(filters.genres || []);
   const [selectedRegions, setSelectedRegions] = useState<string[]>(filters.regions || []);
   const [selectedAgeRatings, setSelectedAgeRatings] = useState<string[]>(filters.ageRating || []);
-  const [releaseYear, setReleaseYear] = useState([filters.releaseYearFrom || 1950]);
   const [rating, setRating] = useState([filters.ratingMin || 0]);
   const [runtime, setRuntime] = useState(filters.runtime || "any");
 
@@ -48,14 +47,13 @@ export default function FilterSidebar({ filters, onFilterChange, onClose }: Filt
         genres: selectedGenres.length > 0 ? selectedGenres : undefined,
         regions: selectedRegions.length > 0 ? selectedRegions : undefined,
         ageRating: selectedAgeRatings.length > 0 ? selectedAgeRatings : undefined,
-        releaseYearFrom: releaseYear[0] !== 1950 ? releaseYear[0] : undefined,
         ratingMin: rating[0] !== 0 ? rating[0] : undefined,
         runtime: runtime !== "any" ? runtime : undefined,
       });
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [selectedGenres, selectedRegions, selectedAgeRatings, releaseYear, rating, runtime, onFilterChange]);
+  }, [selectedGenres, selectedRegions, selectedAgeRatings, rating, runtime, onFilterChange]);
 
   const handleGenreChange = (genreId: number, checked: boolean) => {
     if (checked) {
@@ -85,14 +83,12 @@ export default function FilterSidebar({ filters, onFilterChange, onClose }: Filt
     setSelectedGenres([]);
     setSelectedRegions([]);
     setSelectedAgeRatings([]);
-    setReleaseYear([1950]);
     setRating([0]);
     setRuntime("any");
     onFilterChange({
       genres: undefined,
       regions: undefined,
       ageRating: undefined,
-      releaseYearFrom: undefined,
       ratingMin: undefined,
       runtime: undefined,
     });
@@ -103,7 +99,6 @@ export default function FilterSidebar({ filters, onFilterChange, onClose }: Filt
     if (selectedGenres.length > 0) count++;
     if (selectedRegions.length > 0) count++;
     if (selectedAgeRatings.length > 0) count++;
-    if (releaseYear[0] !== 1950) count++;
     if (rating[0] !== 0) count++;
     if (runtime !== "any") count++;
     return count;
@@ -137,7 +132,7 @@ export default function FilterSidebar({ filters, onFilterChange, onClose }: Filt
             <h3 className="font-semibold text-white">Genre</h3>
           </div>
           <div className="space-y-2 max-h-48 overflow-y-auto">
-            {genresData?.genres?.map((genre) => (
+            {genresData?.genres?.map((genre: any) => (
               <div key={genre.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`genre-${genre.id}`}
@@ -185,33 +180,6 @@ export default function FilterSidebar({ filters, onFilterChange, onClose }: Filt
 
         <Separator className="my-6 bg-gray-700" />
 
-        {/* Release Year */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Calendar className="h-4 w-4 text-cinema-gold" />
-            <h3 className="font-semibold text-white">Release Year</h3>
-          </div>
-          <div className="space-y-3">
-            <div className="px-2">
-              <Slider
-                value={releaseYear}
-                onValueChange={setReleaseYear}
-                max={new Date().getFullYear()}
-                min={1950}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>1950</span>
-                <span className="text-cinema-gold font-medium">{releaseYear[0]}</span>
-                <span>{new Date().getFullYear()}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <Separator className="my-6 bg-gray-700" />
-
         {/* IMDb Rating */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
@@ -245,7 +213,7 @@ export default function FilterSidebar({ filters, onFilterChange, onClose }: Filt
             <Clock className="h-4 w-4 text-cinema-gold" />
             <h3 className="font-semibold text-white">Duration</h3>
           </div>
-          <RadioGroup value={runtime} onValueChange={setRuntime}>
+          <RadioGroup value={runtime} onValueChange={(value: "any" | "under90" | "90to120" | "over120") => setRuntime(value)}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="any" id="duration-any" />
               <Label htmlFor="duration-any" className="text-sm text-gray-300 hover:text-white cursor-pointer">

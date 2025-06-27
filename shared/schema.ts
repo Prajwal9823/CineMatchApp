@@ -49,6 +49,8 @@ export const movies = pgTable("movies", {
   voteAverage: decimal("vote_average", { precision: 3, scale: 1 }),
   voteCount: integer("vote_count"),
   genres: jsonb("genres").$type<Array<{ id: number; name: string }>>(),
+  cast: jsonb("cast").$type<Array<{ id: number; name: string; character: string; profile_path: string | null }>>(),
+  trailerUrl: varchar("trailer_url"),
   originalLanguage: varchar("original_language"),
   adult: boolean("adult").default(false),
   popularity: decimal("popularity", { precision: 10, scale: 3 }),
