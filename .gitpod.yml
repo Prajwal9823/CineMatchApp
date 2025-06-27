@@ -1,0 +1,24 @@
+tasks:
+  - name: Setup Database
+    init: |
+      # Start PostgreSQL
+      pg_ctl start
+      # Create database
+      createdb cinematch
+      # Update environment
+      echo "DATABASE_URL=postgresql://gitpod@localhost:5432/cinematch" >> .env
+    command: |
+      # Install dependencies
+      npm install
+      # Set up database schema
+      npm run db:push
+      # Start the application
+      npm run dev
+
+ports:
+  - port: 5000
+    onOpen: open-browser
+
+vscode:
+  extensions:
+    - ms-vscode.vscode-typescript-next
