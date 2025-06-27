@@ -41,23 +41,24 @@ export default function TrendingSection({ movies, onMovieClick }: TrendingSectio
         {movies.slice(0, 4).map((movie, index) => (
           <div 
             key={movie.id} 
-            className="group cursor-pointer relative transition-all duration-300 hover:transform hover:scale-105"
+            className="group cursor-pointer relative transition-all duration-300 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-cinema-gold/20 animate-in slide-in-from-bottom-4 fade-in"
+            style={{ animationDelay: `${index * 0.1}s` }}
             onClick={() => onMovieClick(movie)}
           >
             {/* Trending Badge */}
             <div className="absolute top-2 left-2 z-10">
-              <Badge className="bg-cinema-red text-white text-xs font-semibold animate-pulse">
+              <Badge className="bg-gradient-to-r from-cinema-red to-red-600 text-white text-xs font-semibold animate-pulse shadow-lg">
                 #{index + 1}
               </Badge>
             </div>
 
-            <div className="relative overflow-hidden rounded-xl bg-cinema-gray">
+            <div className="relative overflow-hidden rounded-xl bg-cinema-gray shadow-lg group-hover:shadow-cinema-gold/30 transition-shadow duration-300">
               {/* Movie Poster */}
               {movie.posterPath ? (
                 <img
                   src={getPosterUrl(movie.posterPath)!}
                   alt={movie.title}
-                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300"
+                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
                 />
               ) : (
                 <div className="w-full h-48 bg-cinema-gray flex items-center justify-center">
@@ -66,7 +67,7 @@ export default function TrendingSection({ movies, onMovieClick }: TrendingSectio
               )}
               
               {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out">
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center text-cinema-gold">

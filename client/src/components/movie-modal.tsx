@@ -22,25 +22,25 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
   const [showTrailer, setShowTrailer] = useState(false);
 
   // Fetch trailer URL
-  const { data: trailerData } = useQuery({
+  const { data: trailerData } = useQuery<{ trailerUrl?: string }>({
     queryKey: [`/api/movies/${movie.id}/trailer`],
     enabled: !!user && !!movie,
   });
 
   // Fetch watchlist status
-  const { data: watchlistStatus } = useQuery({
+  const { data: watchlistStatus } = useQuery<{ inWatchlist: boolean }>({
     queryKey: [`/api/watchlist/${movie.id}/status`],
     enabled: !!user && !!movie,
   });
 
   // Fetch favorite status
-  const { data: favoriteStatus } = useQuery({
+  const { data: favoriteStatus } = useQuery<{ inFavorites: boolean }>({
     queryKey: [`/api/favorites/${movie.id}/status`],
     enabled: !!user && !!movie,
   });
 
   // Fetch user rating
-  const { data: userRating } = useQuery({
+  const { data: userRating } = useQuery<{ rating: number }>({
     queryKey: [`/api/ratings/${movie.id}`],
     enabled: !!user && !!movie,
   });
@@ -249,14 +249,14 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
   return (
     <>
       {/* Main Modal */}
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-75 backdrop-blur-sm">
-        <div className="flex items-center justify-center min-h-screen px-4">
-          <div className="relative bg-cinema-gray rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-80 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="flex items-center justify-center min-h-screen px-4 py-8">
+          <div className="relative bg-cinema-gray rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 shadow-2xl">
             
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+              className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 hover:scale-110 transition-all duration-200"
             >
               <X className="h-5 w-5" />
             </button>
@@ -366,7 +366,7 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
                     <div className="flex flex-wrap gap-3 mb-6">
                       {trailerData?.trailerUrl && (
                         <Button
-                          className="bg-cinema-gold hover:bg-cinema-accent text-cinema-dark"
+                          className="bg-cinema-gold hover:bg-cinema-accent text-cinema-dark btn-glow transition-all duration-300 hover:scale-105 pulse-glow"
                           onClick={() => setShowTrailer(true)}
                         >
                           <Play className="h-4 w-4 mr-2" />
@@ -375,20 +375,24 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
                       )}
                       <Button
                         variant="outline"
-                        className="bg-cinema-gray hover:bg-gray-600 text-white border-gray-600"
+                        className="bg-cinema-gray hover:bg-gray-600 text-white border-gray-600 transition-all duration-200 hover:scale-105 hover:border-cinema-gold"
                         onClick={handleWatchlistToggle}
                         disabled={addToWatchlistMutation.isPending || removeFromWatchlistMutation.isPending}
                       >
-                        <Plus className="h-4 w-4 mr-2" />
+                        <Plus className={`h-4 w-4 mr-2 transition-transform duration-200 ${
+                          addToWatchlistMutation.isPending || removeFromWatchlistMutation.isPending ? 'animate-spin' : ''
+                        }`} />
                         {watchlistStatus?.inWatchlist ? "Remove from List" : "Add to List"}
                       </Button>
                       <Button
                         variant="outline"
-                        className="bg-cinema-gray hover:bg-gray-600 text-white border-gray-600"
+                        className="bg-cinema-gray hover:bg-gray-600 text-white border-gray-600 transition-all duration-200 hover:scale-105 hover:border-red-500"
                         onClick={handleFavoriteToggle}
                         disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
                       >
-                        <Heart className={`h-4 w-4 mr-2 ${favoriteStatus?.inFavorites ? 'fill-current text-red-500' : ''}`} />
+                        <Heart className={`h-4 w-4 mr-2 transition-all duration-200 ${
+                          favoriteStatus?.inFavorites ? 'fill-current text-red-500 scale-110' : ''
+                        } ${addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending ? 'animate-pulse' : ''}`} />
                         {favoriteStatus?.inFavorites ? "Remove from Favorites" : "Like"}
                       </Button>
                     </div>
@@ -430,21 +434,24 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
 
       {/* Trailer Modal */}
       {showTrailer && trailerData?.trailerUrl && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-90">
-          <div className="relative w-full max-w-4xl mx-4 aspect-video">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="relative w-full max-w-5xl mx-4 aspect-video animate-in zoom-in-95 duration-300">
             <button
               onClick={() => setShowTrailer(false)}
-              className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+              className="absolute -top-12 right-0 z-10 w-10 h-10 bg-cinema-gold/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-cinema-gold/40 transition-all duration-200 hover:scale-110"
             >
               <X className="h-5 w-5" />
             </button>
-            <iframe
-              src={trailerData.trailerUrl}
-              title={`${movie.title} Trailer`}
-              className="w-full h-full rounded-lg"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+            <div className="w-full h-full bg-black rounded-xl overflow-hidden shadow-2xl">
+              <iframe
+                src={trailerData?.trailerUrl?.replace('watch?v=', 'embed/') || ''}
+                title={`${movie.title} Trailer`}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                frameBorder="0"
+              />
+            </div>
           </div>
         </div>
       )}

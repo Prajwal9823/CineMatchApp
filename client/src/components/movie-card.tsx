@@ -21,13 +21,13 @@ export default function MovieCard({ movie, onClick }: MovieCardProps) {
   const [imageError, setImageError] = useState(false);
 
   // Fetch watchlist status
-  const { data: watchlistStatus } = useQuery({
+  const { data: watchlistStatus } = useQuery<{ inWatchlist: boolean }>({
     queryKey: [`/api/watchlist/${movie.id}/status`],
     enabled: !!user,
   });
 
   // Fetch favorite status
-  const { data: favoriteStatus } = useQuery({
+  const { data: favoriteStatus } = useQuery<{ inFavorites: boolean }>({
     queryKey: [`/api/favorites/${movie.id}/status`],
     enabled: !!user,
   });
@@ -198,16 +198,16 @@ export default function MovieCard({ movie, onClick }: MovieCardProps) {
 
   return (
     <div 
-      className="group cursor-pointer transition-all duration-300 hover:transform hover:scale-105"
+      className="group cursor-pointer transition-all duration-300 hover:transform hover:scale-105 hover:shadow-2xl hover:shadow-cinema-gold/20"
       onClick={onClick}
     >
-      <div className="relative overflow-hidden rounded-xl bg-cinema-gray">
+      <div className="relative overflow-hidden rounded-xl bg-cinema-gray shadow-lg group-hover:shadow-cinema-gold/30 transition-shadow duration-300">
         {/* Movie Poster */}
         {posterUrl ? (
           <img
             src={posterUrl}
             alt={movie.title}
-            className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-300"
+            className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
             onError={() => setImageError(true)}
           />
         ) : (
@@ -217,7 +217,7 @@ export default function MovieCard({ movie, onClick }: MovieCardProps) {
         )}
         
         {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out">
           <div className="absolute bottom-0 left-0 right-0 p-4">
             {/* Rating and Actions */}
             <div className="flex items-center justify-between mb-2">
@@ -229,20 +229,24 @@ export default function MovieCard({ movie, onClick }: MovieCardProps) {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white"
+                  className="h-8 w-8 bg-white/20 backdrop-blur-sm hover:bg-white/30 hover:scale-110 text-white transition-all duration-200"
                   onClick={handleWatchlistToggle}
                   disabled={addToWatchlistMutation.isPending || removeFromWatchlistMutation.isPending}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className={`h-4 w-4 transition-transform duration-200 ${
+                    addToWatchlistMutation.isPending || removeFromWatchlistMutation.isPending ? 'animate-spin' : ''
+                  }`} />
                 </Button>
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white"
+                  className="h-8 w-8 bg-white/20 backdrop-blur-sm hover:bg-white/30 hover:scale-110 text-white transition-all duration-200"
                   onClick={handleFavoriteToggle}
                   disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
                 >
-                  <Heart className={`h-4 w-4 ${favoriteStatus?.inFavorites ? 'fill-current text-red-500' : ''}`} />
+                  <Heart className={`h-4 w-4 transition-all duration-200 ${
+                    favoriteStatus?.inFavorites ? 'fill-current text-red-500 scale-110' : ''
+                  } ${addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending ? 'animate-pulse' : ''}`} />
                 </Button>
               </div>
             </div>
