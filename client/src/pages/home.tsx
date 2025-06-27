@@ -28,31 +28,14 @@ export default function Home() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [user, authLoading, toast]);
-
-  // Fetch movies
-  const { data: moviesData, isLoading: moviesLoading } = useQuery({
+  // Fetch movies (no authentication required)
+  const { data: moviesData, isLoading: moviesLoading } = useQuery<{ movies: Movie[]; total: number }>({
     queryKey: ["/api/movies", filters],
-    enabled: !!user,
   });
 
-  // Fetch trending movies
-  const { data: trendingMovies } = useQuery({
+  // Fetch trending movies (no authentication required)
+  const { data: trendingMovies } = useQuery<Movie[]>({
     queryKey: ["/api/movies/trending"],
-    enabled: !!user,
   });
 
   // Sync trending movies on first load
@@ -65,18 +48,12 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ["/api/movies"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       console.error("Error syncing trending movies:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sync trending movies",
+        variant: "destructive",
+      });
     },
   });
 
@@ -89,30 +66,47 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ["/api/movies"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",  
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       console.error("Error syncing popular movies:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sync popular movies",
+        variant: "destructive",
+      });
     },
   });
 
-  // Initialize movie data
+  // Sync Bollywood movies
+  const syncBollywoodMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/tmdb/sync/bollywood");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/movies"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/movies/trending"] });
+    },
+    onError: (error) => {
+      console.error("Error syncing Bollywood movies:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sync Bollywood movies",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Initialize movie data (no authentication required)
   useEffect(() => {
-    if (user && (!moviesData?.movies || moviesData.movies.length === 0)) {
+    if (!moviesData?.movies || moviesData.movies.length === 0) {
       syncPopularMutation.mutate();
+      // Also sync Bollywood movies for diversity
+      setTimeout(() => {
+        syncBollywoodMutation.mutate();
+      }, 1000);
     }
-    if (user && (!trendingMovies || trendingMovies.length === 0)) {
+    if (!trendingMovies || trendingMovies.length === 0) {
       syncTrendingMutation.mutate();
     }
-  }, [user, moviesData, trendingMovies]);
+  }, [moviesData, trendingMovies]);
 
   const handleFilterChange = (newFilters: Partial<MovieFilter>) => {
     setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
@@ -126,19 +120,15 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (authLoading) {
+  if (moviesLoading && (!moviesData?.movies || moviesData.movies.length === 0)) {
     return (
       <div className="min-h-screen bg-cinema-dark flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cinema-gold mx-auto mb-4"></div>
-          <p className="text-white">Loading...</p>
+          <p className="text-white">Loading movies...</p>
         </div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null; // Will redirect to login
   }
 
   return (

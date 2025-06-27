@@ -9,18 +9,10 @@ import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          {/* Add more authenticated routes here */}
-        </>
-      )}
+      <Route path="/" component={Home} />
+      <Route path="/landing" component={Landing} />
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

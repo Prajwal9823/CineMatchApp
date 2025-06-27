@@ -167,6 +167,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/tmdb/sync/bollywood', async (req, res) => {
+    try {
+      // Search for popular Hindi/Bollywood movies
+      const bollywoodMovies = await tmdbService.discoverMovies({
+        with_original_language: 'hi',
+        sort_by: 'popularity.desc',
+        page: 1
+      });
+      
+      const syncedMovies = [];
+      for (const tmdbMovie of bollywoodMovies.results) {
+        let movie = await storage.getMovieByTmdbId(tmdbMovie.id);
+        
+        if (!movie) {
+          const movieDetails = await tmdbService.getMovieDetails(tmdbMovie.id);
+          movie = await storage.createMovie({
+            tmdbId: movieDetails.id,
+            title: movieDetails.title,
+            overview: movieDetails.overview,
+            posterPath: movieDetails.poster_path,
+            backdropPath: movieDetails.backdrop_path,
+            releaseDate: movieDetails.release_date,
+            runtime: movieDetails.runtime,
+            voteAverage: movieDetails.vote_average.toString(),
+            voteCount: movieDetails.vote_count,
+            genres: movieDetails.genres,
+            originalLanguage: movieDetails.original_language,
+            adult: movieDetails.adult,
+            popularity: movieDetails.popularity.toString(),
+          });
+        }
+        syncedMovies.push(movie);
+      }
+      
+      res.json({ syncedMovies, total: bollywoodMovies.total_results });
+    } catch (error) {
+      console.error("Error syncing Bollywood movies:", error);
+      res.status(500).json({ message: "Failed to sync Bollywood movies" });
+    }
+  });
+
   // Watchlist routes
   app.get('/api/watchlist', isAuthenticated, async (req: any, res) => {
     try {
